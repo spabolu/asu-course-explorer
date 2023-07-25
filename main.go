@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -108,7 +110,13 @@ func getClassesByCourse(c *gin.Context) {
 }
 
 func main() {
-	opt, _ := redis.ParseURL("redis://default:c935507737d5440e9c3ea40001e832cd@usw1-equal-crow-33656.upstash.io:33656")
+	error := godotenv.Load(".env")
+	if error != nil {
+		fmt.Println("Error loading .env file")
+		os.Exit(1)
+	}
+
+	opt, _ := redis.ParseURL(os.Getenv("REDIS_ENDPOINT"))
 	client = redis.NewClient(opt)
 
 	router := gin.Default()
