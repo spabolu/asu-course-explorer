@@ -1,10 +1,11 @@
-module spabolu/asu-course-explorer
+module github.com/spabolu/asu-course-explorer
 
 go 1.20
 
 require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-rod/rod v0.114.1
+	mvdan.cc/xurls/v2 v2.5.0
 )
 
 require (

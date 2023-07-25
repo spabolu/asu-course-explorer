@@ -1,17 +1,18 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"github.com/go-rod/rod"
-	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/go-rod/rod"
+	"mvdan.cc/xurls/v2"
 )
 
+// ClassInformation holds the class details scraped from the webpage
 type ClassInformation struct {
 	Course     string `json:"course"`
 	Title      string `json:"title"`
+	Name       string `json:"name"`
 	Class      string `json:"class"`
 	Instructor string `json:"instructor"`
 	Days       string `json:"days"`
@@ -21,101 +22,102 @@ type ClassInformation struct {
 	Dates      string `json:"dates"`
 	Units      string `json:"units"`
 	Seats      string `json:"seats"`
+	Syllabus   string `json:"syllabus"`
+	GS         string `json:"gs"`
 	IsOpen     bool   `json:"is_open"`
 }
 
-func scrapeClass(classNumber string) (ClassInformation, error) {
-	if len(classNumber) != 5 {
-		return ClassInformation{}, errors.New("class number must be 5 digits")
+// Returns information about a specific class by ID
+func scrapeClass(classId string) []ClassInformation {
+	// If class ID is invalid, return an empty list
+	if len(classId) != 5 {
+		return []ClassInformation{}
+	}
+	return scrape("https://catalog.apps.asu.edu/catalog/classes/classlist?campusOrOnlineSelection=C&honors=F&keywords=" + classId + "&promod=F&searchType=all&term=2237")
+}
+
+// Returns information about all classes
+func scrapeClasses() []ClassInformation {
+	return scrape("https://catalog.apps.asu.edu/catalog/classes/classlist?campusOrOnlineSelection=C&honors=F&promod=F&searchType=all&term=2237")
+}
+
+// Returns information about all classes for a specific course
+func scrapeClassesByCourse(subject string, number string) []ClassInformation {
+	// If subject and number are invalid, return an empty list
+	if len(subject) != 3 || len(number) != 3 || !IsLetter(subject) || !IsLetter(number) {
+		return []ClassInformation{}
 	}
 
-	url := fmt.Sprintf("https://catalog.apps.asu.edu/catalog/classes/classlist?campusOrOnlineSelection=A&honors=F&keywords=%s&promod=F&searchType=all&term=2237", classNumber)
+	return scrape("https://catalog.apps.asu.edu/catalog/classes/classlist?campusOrOnlineSelection=C&catalogNbr=" + number + "&honors=F&promod=F&searchType=all&subject=" + subject + "&term=2237")
+}
 
+func IsLetter(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+
+// Helper function to scrape classes from the given URL
+func scrape(url string) []ClassInformation {
 	browser := rod.New().MustConnect()
 	defer browser.MustClose()
 
 	page := browser.MustPage(url).MustWaitStable()
 
-	list := page.MustWaitStable().MustElements(".class-results-cell")
+	rows := page.MustElement(".class-results-rows").MustElements(".class-accordion")
 
-	var htmlDOM []string
-	builder := &strings.Builder{}
+	courses := make([]ClassInformation, 0, len(rows))
 
-	for _, element := range list {
-		builder.Reset()
-		text := strings.TrimRightFunc(element.MustText(), unicode.IsSpace)
-		text = strings.ReplaceAll(text, "\n", " ")
+	for _, element := range rows {
+		classInfo := element.MustElements(".class-results-cell")
 
-		if text != "" {
-			htmlDOM = append(htmlDOM, text)
+		// Filter out elements with 'Multiple dates and times' text
+		filteredClassInfo := make([]*rod.Element, 0, len(classInfo))
+		for _, elem := range classInfo {
+			if elem.MustText() != "Multiple dates and times" {
+				filteredClassInfo = append(filteredClassInfo, elem)
+			}
 		}
-	}
 
-	// TODO: Fix issue with iCourse, and multiple instructors courses
-	removeIndices := map[int]struct{}{2: {}, 5: {}, 13: {}, 14: {}, 15: {}}
-
-	if !strings.Contains(htmlDOM[9], "Hybrid") && !strings.Contains(htmlDOM[5], "Multiple") {
-		removeIndices = map[int]struct{}{2: {}, 12: {}, 13: {}, 14: {}}
-	}
-
-	var classData []string
-	for i, val := range htmlDOM {
-		if _, found := removeIndices[i]; !found {
-			classData = append(classData, val)
+		// Ensure that we have the correct number of data points for a class
+		if len(filteredClassInfo) != 15 {
+			continue
 		}
+
+		// Determine if there are open seats in the class
+		openSeat := strings.TrimSpace(filteredClassInfo[11].MustText())[0] != '0'
+
+		// Extract link to the class syllabus
+		Link := ""
+		xurlsStrict := xurls.Strict()
+		if matches := xurlsStrict.FindAllString(strings.TrimSpace(filteredClassInfo[12].MustHTML()), -1); len(matches) > 0 {
+			Link = matches[0]
+		}
+
+		// Create and append new ClassInformation
+		course := ClassInformation{
+			Course:     strings.TrimSpace(filteredClassInfo[0].MustText()),
+			Title:      strings.TrimSpace(filteredClassInfo[1].MustText()),
+			Name:       strings.TrimSpace(filteredClassInfo[2].MustText()),
+			Class:      strings.TrimSpace(filteredClassInfo[3].MustText()),
+			Instructor: strings.TrimSpace(filteredClassInfo[4].MustText()),
+			Days:       strings.TrimSpace(filteredClassInfo[5].MustText()),
+			StartTime:  strings.TrimSpace(filteredClassInfo[6].MustText()),
+			EndTime:    strings.TrimSpace(filteredClassInfo[7].MustText()),
+			Location:   strings.ReplaceAll(strings.TrimSpace(filteredClassInfo[8].MustText()), "\n", " "),
+			Dates:      strings.ReplaceAll(strings.TrimSpace(filteredClassInfo[9].MustText()), "\n", " "),
+			Units:      strings.TrimSpace(filteredClassInfo[10].MustText()),
+			Seats:      strings.TrimSpace(filteredClassInfo[11].MustText()),
+			Syllabus:   Link,
+			GS:         strings.TrimSpace(filteredClassInfo[13].MustText()),
+			IsOpen:     openSeat,
+		}
+
+		courses = append(courses, course)
 	}
 
-	classDetails := ClassInformation{
-		Course:     getOrDefault(classData, 0),
-		Title:      getOrDefault(classData, 1),
-		Class:      getOrDefault(classData, 2),
-		Instructor: parseInstructor(getOrDefault(classData, 3)),
-		Days:       getOrDefault(classData, 4),
-		StartTime:  getOrDefault(classData, 5),
-		EndTime:    getOrDefault(classData, 6),
-		Location:   getOrDefault(classData, 7),
-		Dates:      getOrDefault(classData, 8),
-		Units:      getOrDefault(classData, 9),
-		Seats:      getOrDefault(classData, 10),
-		IsOpen:     hasOpenSeats(getOrDefault(classData, 10)),
-	}
-
-	return classDetails, nil
-}
-
-func getOrDefault(data []string, index int) string {
-	if index < len(data) {
-		return data[index]
-	}
-	return ""
-}
-
-// TODO: Simplify the logic here
-func hasOpenSeats(input string) bool {
-	parts := strings.Split(input, " of ")
-	if len(parts) != 2 {
-		fmt.Println("Invalid input format")
-		return false
-	}
-
-	firstNumber, err := strconv.Atoi(strings.TrimSpace(parts[0]))
-	if err != nil {
-		fmt.Println("Error converting first part to integer:", err)
-		return false
-	}
-
-	secondNumber, err := strconv.Atoi(strings.TrimSpace(parts[1]))
-	if err != nil {
-		fmt.Println("Error converting second part to integer:", err)
-		return false
-	}
-
-	return firstNumber <= secondNumber
-}
-
-func parseInstructor(instructor string) string {
-	if strings.Contains(instructor, "Multiple instructors") {
-		return "Multiple Instructors"
-	}
-	return instructor
+	return courses
 }

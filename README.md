@@ -27,31 +27,23 @@ go mod download
 go run .
 ```
 
-### API Endpoints (tentative)
+### API Endpoints _(so far)_
 
-`/classes` - Returns all classes for a given subject and term.
+#### Classes
 
-`/classes/:subject` - Returns all classes for a given subject and term.
+`/api/classes` - Fetches a list of all classes.
 
-`/classes/:subject/:course` - Returns all classes for a given subject, course, and term.
+`/api/classes/{classId}`: Fetches information about a specific class.
 
-`/classes/:subject/:course/:term` - Returns all classes for a given subject, course, and term.
+`/api/classes/course/{classId}`: Fetches all classes associated with a specific course.
 
-`/classes/:subject/:course/:term/:section` - Returns all classes for a given subject, course, term, and section.
-
-`/subjects` - Returns all subjects for a given term.
-
-`/subjects/:term` - Returns all subjects for a given term.
-
-`/terms` - Returns all terms.
-
-`/terms/:term` - Returns all terms.
 
 ### Roadmap
 See the [open issues](https://github.com/spabolu/asu-course-explorer/issues)
 
 - [x] Add specific class endpoint
 - [ ] Add semesters endpoint
+- [ ] Add professors endpoint
 - [ ] Add course descriptions endpoint
 - [ ] Add Redis caching
 - [ ] Add Docker support
