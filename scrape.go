@@ -44,7 +44,7 @@ func scrapeClasses() []ClassInformation {
 // Returns information about all classes for a specific course
 func scrapeClassesByCourse(subject string, number string) []ClassInformation {
 	// If subject and number are invalid, return an empty list
-	if len(subject) != 3 || len(number) != 3 || !IsLetter(subject) || !IsLetter(number) {
+	if len(subject) != 3 || len(number) != 3 || !IsLetter(subject) || !isNumber(number) {
 		return []ClassInformation{}
 	}
 
@@ -54,6 +54,15 @@ func scrapeClassesByCourse(subject string, number string) []ClassInformation {
 func IsLetter(s string) bool {
 	for _, r := range s {
 		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+
+func isNumber(s string) bool {
+	for _, r := range s {
+		if !unicode.IsNumber(r) {
 			return false
 		}
 	}
