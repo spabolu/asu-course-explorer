@@ -59,3 +59,7 @@ If you have a suggestion that would make this better, please fork the repo and c
 
 ### License
 Distributed under the GPL-3.0. See `LICENSE.txt` for more information.
+
+### Support
+
+If you like what you see and want to use a powerful iteration of this program to track your classes at ASU, please support and use [Courseer](https://courseer.co/).
