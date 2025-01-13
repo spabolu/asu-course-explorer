@@ -5,7 +5,7 @@ High-Performance API for ASU Course Catalog written in Go.
 Arizona State University doesn't have an openly available API to access their course catalog. As it stands, students must navigate through the university's [website](https://catalog.apps.asu.edu/catalog/courses/courselist) to find this information, which is often buried in several layers of webpages.
 `ASU Course Explorer` aims to solve the missing piece to the problem. 
 
-Built this as a fun side project and a heavily-modified production version written in TypeScript is what's running the backend for [Courseer](https://courseer.co/)!
+Built this as a fun side project and a heavily-modified production version written in Golang is what's running the backend for [Courseer](https://courseer.co/)!
 Feel free to implement this project into your personal open-source projects!
 
 ### Built With
