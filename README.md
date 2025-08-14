@@ -1,21 +1,24 @@
 # ASU Course Explorer 🔱
-High-Performance API for ASU Course Catalog written in Go.
+A high-performance API for accessing the ASU Course Catalog, built with Go.
 
-### About The Project
-Arizona State University doesn't have an openly available API to access their course catalog. As it stands, students must navigate through the university's [website](https://catalog.apps.asu.edu/catalog/courses/courselist) to find this information, which is often buried in several layers of webpages.
-`ASU Course Explorer` aims to solve the missing piece to the problem. 
+## About The Project
 
-Built this as a fun side project and a heavily-modified production version written in Golang is what's running the backend for [Courseer](https://courseer.co/)!
-Feel free to implement this project into your personal open-source projects!
+Arizona State University doesn't provide an openly available API to access their course catalog. Currently, students must navigate through the university's [website](https://catalog.apps.asu.edu/catalog/courses/courselist) to find course information, which is often buried across multiple webpages.
 
-### Built With
-- [Go](https://go.dev/) - Programming Language
+**ASU Course Explorer** solves this problem by providing a clean, fast API interface to access ASU course data programmatically.
+
+This project started as a fun side project, and a heavily modified, even faster production version now powers the backend for [Courseer](https://courseer.co/)!
+
+## Built With
+
+- [Golang](https://go.dev/) - Programming Language
 - [Rod](https://github.com/go-rod/rod) - Driver for DevTools Protocol
 - [Gin](https://github.com/gin-gonic/gin) - Web Framework
 - [Redis](https://github.com/redis/go-redis) - In-Memory Data Structure Store (for caching)
 
-### Get Started
-Clone the repository and make sure Go is installed before running the following commands.
+## Getting Started
+
+Clone the repository and make sure Go is installed before running the following commands:
 
 ```shell
 cd asu-course-explorer/
@@ -23,43 +26,67 @@ cd asu-course-explorer/
 # Install dependencies
 go mod download
 
+# Set up environment variables (create .env file with REDIS_ENDPOINT)
+cp .env.example .env  # Edit with your Redis endpoint
+
 # Run the server
 go run .
 ```
 
-### API Endpoints _(so far)_
+The server will start on port 8080 by default.
 
-#### Classes
+## API Endpoints
 
-`/api/classes` - Fetches a list of all classes.
+### Classes
 
-`/api/classes/{classId}`: Fetches information about a specific class.
+- **`GET /api/classes`** - Fetches a list of all classes
+- **`GET /api/classes/{classId}`** - Fetches information about a specific class (5-digit class ID)
+- **`GET /api/classes/course/{courseId}`** - Fetches all classes for a specific course (format: 3-letter subject + 3-digit number, e.g., "CSE110")
 
-`/api/classes/course/{classId}`: Fetches all classes associated with a specific course.
+### Response Format
 
+Each class object includes:
 
-### Roadmap
-See the [open issues](https://github.com/spabolu/asu-course-explorer/issues)
+- Course code and title
+- Class number and instructor
+- Meeting days, times, and location
+- Available seats and units
+- Syllabus link (if available)
+- General Studies designations
+
+## Features
+
+- **Redis Caching**: 30-minute cache TTL for improved performance
+- **Web Scraping**: Real-time data from ASU's course catalog
+- **RESTful API**: Clean, predictable endpoints
+- **Error Handling**: Robust error responses and validation
+
+## Roadmap
+
+See the [open issues](https://github.com/spabolu/asu-course-explorer/issues) for planned features:
 
 - [x] Add specific class endpoint
+- [x] Add Redis caching
 - [ ] Add semesters endpoint
 - [ ] Add professors endpoint
 - [ ] Add course descriptions endpoint
-- [ ] Add Redis caching
 - [ ] Add Docker support
+- [ ] Add rate limiting
 
-### Contributing
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement". Don't forget to give the project a star! Thanks again!
+## Contributing
 
-- Fork the Project
-- Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-- Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-- Push to the Branch (`git push origin feature/AmazingFeature`)
-- Open a Pull Request
+Contributions are welcome! If you have suggestions for improvements, please fork the repo and create a pull request, or open an issue with the "enhancement" tag.
 
-### License
-Distributed under the GPL-3.0. See `LICENSE.txt` for more information.
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-### Support
+## License
+
+Distributed under the GPL-3.0 License. See `LICENSE` for more information.
+
+## Support
 
 If you like what you see and want to use a powerful iteration of this program to track your classes at ASU, please support and use [Courseer](https://courseer.co/).
