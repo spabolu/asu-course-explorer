@@ -1,4 +1,5 @@
 # ASU Course Explorer 🔱
+
 A high-performance API for accessing the ASU Course Catalog, built with Go.
 
 ## About The Project
